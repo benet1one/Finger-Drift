@@ -16,7 +16,8 @@ Scene <- R6Class("Scene", list(
     },
     open = function() {
         graphics.off()
-        windows(width = self$width, height = self$height, bg = self$bg)
+        windows(width = self$width, height = self$height, bg = self$bg,
+                title = "Finger Drift R")
     },
     update = function() {
         par(mar = rep(0, 4),

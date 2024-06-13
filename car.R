@@ -53,36 +53,26 @@ Car <- R6Class("Car", list(
             accel * cos_sin(delta) +
             vphi  * cos_sin(phi)
     },
-    target = function(target = c(0, 0), deviation = 0.1) {
-        relative_pos <- self$pos - target
-        target_angle <- angle_of(relative_pos)
-        angle_left <- (target_angle - self$direction) %% twopi
+    target_angle = function(angle, deviation = 0.1) {
+        angle_left <- (self$direction - angle) %% twopi
         angle_diff <- angle_left - pi
-        if (abs(angle_diff) < deviation)
+        if (abs(angle_diff) < deviation && angle_left < deviation)
             0
         else if (angle_diff > 0)
             +1
         else
             -1
     },
+    target = function(target = c(0, 0), deviation = 0.1) {
+        angle <- angle_of(target - self$pos)
+        self$target_angle(angle, deviation)
+    },
     plot = function() {
-        # dir_pos <- self$pos + 8 * cos_sin(self$direction)
-        # lines(x = c(self$pos[1L], dir_pos[1L]), 
-        #       y = c(self$pos[2L], dir_pos[2L]),
-        #       col = self$color)
-        # points(x = self$pos[1L], y = self$pos[2L], pch = 16, col = self$color)
-        
-        # x <- car_shape$x
-        # y <- car_shape$y
-        # rotation <- cos_sin(self$direction)
-        # x <- x*rotation[1L] - y*rotation[2L]
-        # y <- y*rotation[1L] + x*rotation[2L]
-        # x <- x + self$pos[1L]
-        # y <- y + self$pos[2L]
-        
-        theta <- (car_shape$theta + self$direction) %% twopi
-        shape <- sapply(theta, \(t) self$pos + car_size * cos_sin(t))
+        theta <- (car_shape_theta + self$direction) %% twopi
+        shape <- mapply(theta, car_shape_size, 
+                        FUN = \(th, size) self$pos + size*cos_sin(th))
         polygon(shape[1L, ], shape[2L, ], col = self$color, border = "#00000000")
+        # browser()
     }
 ))
 
@@ -100,11 +90,12 @@ min_angle_difference <- function(angle1, angle2) {
     min(d %% twopi)
 }
 
-car_x <- 3
-car_y <- 2
-car_size <- 4
-car_shape <- data.frame(
-    x = c(-1, -1,  1,  1) * car_x,
-    y = c(-1,  1,  1, -1) * car_y
+car_x <- 3.5
+car_y <- 2.4
+# car_size <- 4
+car_shape <- rbind(
+    x = c(-0.8, -1.0, -1.0, -0.8, +0.8, +1.0, +1.0, +0.8) * car_x,
+    y = c(-1.0, -0.8, +0.8, +1.0, +1.0, +0.8, -0.8, -1.0) * car_y
 )
-car_shape$theta <- atan2(car_shape$y, car_shape$x)
+car_shape_theta <- atan2(car_shape["y", ], car_shape["x", ])
+car_shape_size <- apply(car_shape, 2L, norm, type = "2")
